@@ -1,0 +1,72 @@
+# charts/app/values.yaml
+# ────────────────────────
+# §4.5.2 — Helm deployment configuration
+# §4.6.3 — terminationGracePeriodSeconds = 60 (drain in-flight requests)
+# §4.2.2 — readiness + liveness probes on /health
+
+replicaCount: 2
+
+image:
+  repository: REPLACE_WITH_ECR_URI
+  tag: v1.0
+  pullPolicy: IfNotPresent
+
+# §4.5.2 — cloud.provider injected as env var → visible in /health response
+cloud:
+  provider: aws
+
+service:
+  type: LoadBalancer
+  port: 80
+  targetPort: 8080
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+
+# §4.2.2 — readiness probe (gates traffic) and liveness probe (restarts pods)
+# Both use /health endpoint — satisfies all three consumers (K8s, Orchestrator, Route 53)
+readinessProbe:
+  httpGet:
+    path: /health
+    port: 8080
+  initialDelaySeconds: 5
+  periodSeconds: 10
+  failureThreshold: 2
+
+livenessProbe:
+  httpGet:
+    path: /health
+    port: 8080
+  initialDelaySeconds: 10
+  periodSeconds: 10
+  failureThreshold: 3
+
+# §4.6.3 — allow 60s for in-flight requests to drain before pod termination
+terminationGracePeriodSeconds: 60
+
+resources:
+  requests:
+    cpu:    "250m"
+    memory: "256Mi"
+  limits:
+    cpu:    "500m"
+    memory: "512Mi"
+
+# Horizontal Pod Autoscaler
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70    # below §4.3.2 CPU_THRESHOLD_PCT (80%)
+
+# Anti-affinity: spread pods across nodes for resilience
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values: [smart-migrator-app]
+          topologyKey: kubernetes.io/hostname

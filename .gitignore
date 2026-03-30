@@ -1,0 +1,32 @@
+# Secrets — never commit these
+.env
+*.pem
+*.key
+*.p12
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.pytest_cache/
+
+# Terraform state — contains real resource IDs and secrets
+terraform/.terraform/
+terraform/terraform.tfstate
+terraform/terraform.tfstate.backup
+terraform/.terraform.lock.hcl
+
+# Audit log — can contain sensitive migration data
+audit/migration_events.jsonl
+
+# macOS
+.DS_Store
+._*
+
+# VSCode (keep launch.json and settings.json — they are useful for the team)
+# .vscode/
+
+# Node
+node_modules/

@@ -1,0 +1,85 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+
+    {
+      "name": "① Setup config (run after terraform apply)",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/config/setup_config.py",
+      "cwd": "${workspaceFolder}",
+      "envFile": "${workspaceFolder}/.env",
+      "env": { "PYTHONPATH": "${workspaceFolder}" },
+      "console": "integratedTerminal"
+    },
+
+    {
+      "name": "② Phase 1 — Onboard app (build + push to ECR)",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/main.py",
+      "args": [
+        "onboard",
+        "--app",    "./app",
+        "--tag",    "v1.0",
+        "--verify-health",
+        "--prestage-dns"
+      ],
+      "cwd": "${workspaceFolder}",
+      "envFile": "${workspaceFolder}/.env",
+      "env": { "PYTHONPATH": "${workspaceFolder}" },
+      "console": "integratedTerminal"
+    },
+
+    {
+      "name": "③ Phase 2-5 — Start monitoring loop",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/main.py",
+      "args": ["run", "--provider", "aws"],
+      "cwd": "${workspaceFolder}",
+      "envFile": "${workspaceFolder}/.env",
+      "env": { "PYTHONPATH": "${workspaceFolder}" },
+      "console": "integratedTerminal"
+    },
+
+    {
+      "name": "④ Manual migrate — AWS → Azure (test)",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/main.py",
+      "args": [
+        "migrate",
+        "--source", "aws",
+        "--target", "azure",
+        "--tag",    "v1.0"
+      ],
+      "cwd": "${workspaceFolder}",
+      "envFile": "${workspaceFolder}/.env",
+      "env": { "PYTHONPATH": "${workspaceFolder}" },
+      "console": "integratedTerminal"
+    },
+
+    {
+      "name": "⑤ Decision Engine only — score all providers",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/phase3_decision/engine.py",
+      "cwd": "${workspaceFolder}",
+      "envFile": "${workspaceFolder}/.env",
+      "env": { "PYTHONPATH": "${workspaceFolder}" },
+      "console": "integratedTerminal"
+    },
+
+    {
+      "name": "⑥ Verify settings (quick import check)",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/config/verify_setup.py",
+      "cwd": "${workspaceFolder}",
+      "envFile": "${workspaceFolder}/.env",
+      "env": { "PYTHONPATH": "${workspaceFolder}" },
+      "console": "integratedTerminal"
+    }
+  ]
+}
