@@ -71,17 +71,20 @@ module "eks" {
   subnet_ids                     = module.vpc.private_subnets
   cluster_endpoint_public_access = true
 
-  # t3.medium is available in ap-south-1 and is cost-effective for research
+  # t3.small listed first — EKS tries each type in order if one fails
+  # t3.micro is free-tier eligible but too small for Kubernetes system pods
   eks_managed_node_groups = {
     default = {
-      instance_types = ["t3.medium"]
-      min_size       = 2
-      max_size       = 5
+      instance_types = ["t3.small", "t3.medium", "t2.small"]
+      min_size       = 1
+      max_size       = 3
       desired_size   = 2
       labels = {
         cloud  = "aws"
         region = "ap-south-1"
       }
+      # Capacity type: ON_DEMAND is required for EKS managed node groups
+      capacity_type  = "ON_DEMAND"
     }
   }
 
@@ -134,5 +137,5 @@ output "configure_kubectl" {
 }
 
 output "cost_estimate" {
-  value = "Approx cost: EKS control plane $0.10/hr + 2x t3.medium $0.052/hr + NAT $0.045/hr ≈ $0.25/hr (~₹21/hr)"
+  value = "Approx cost: EKS control plane $0.10/hr + 2x t3.small $0.046/hr + NAT $0.045/hr ≈ $0.19/hr (~₹16/hr)"
 }
